@@ -1,0 +1,7 @@
+import {describe,expect,it,vi} from 'vitest';
+import {SpreadLockApiClient,ApiResponseError} from './api.js';
+describe('HTTP SDK boundary',()=>{
+ it('does not attach sessions to login challenges and bounds all requests to pinned origin',async()=>{const fake=vi.fn(async(_url:unknown,_init?:unknown)=>new Response(JSON.stringify({success:true,data:{challengeId:'c',message:'m',expiresAt:'future'}})));const sdk=new SpreadLockApiClient('https://api.example',fake);await sdk.challenge('0x1111111111111111111111111111111111111111',50383);expect(String(fake.mock.calls[0]?.[0])).toBe('https://api.example/v1/auth/challenge');await expect(sdk.request('GET','https://attacker.example')).rejects.toThrow();});
+ it('requires a session and preserves structured API errors',async()=>{const fake=vi.fn(async(_url:unknown,_init?:unknown)=>new Response(JSON.stringify({success:false,error:{code:'CHANGED',message:'State changed'}}),{status:409}));const sdk=new SpreadLockApiClient('http://127.0.0.1:18180',fake);await expect(sdk.baskets()).rejects.toThrow('session required');sdk.setSession('a'.repeat(43));await expect(sdk.baskets()).rejects.toMatchObject({status:409,code:'CHANGED'});});
+ it('rejects nonlocal plaintext HTTP and malformed session tokens',()=>{expect(()=>new SpreadLockApiClient('http://external.example')).toThrow();const s=new SpreadLockApiClient('https://api.example');expect(()=>s.setSession('secret')).toThrow();});
+});

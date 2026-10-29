@@ -1,0 +1,4 @@
+import { hashTypedData,type Address,type Hex } from 'viem';
+export interface KeeperCertificate {owner:Address;keeper:Address;accounts:Address[];chainId:number;validUntil:string;nonce:string;signature:Hex;}
+export function keeperTypedData(cert:Omit<KeeperCertificate,'signature'>,router:Address){return{domain:{name:'SpreadLockKeeperAccess',version:'1',chainId:cert.chainId,verifyingContract:router},primaryType:'KeeperAuthorization' as const,types:{KeeperAuthorization:[{name:'owner',type:'address'},{name:'keeper',type:'address'},{name:'accounts',type:'address[]'},{name:'validUntil',type:'uint64'},{name:'nonce',type:'uint256'}]},message:{owner:cert.owner,keeper:cert.keeper,accounts:cert.accounts,validUntil:BigInt(cert.validUntil),nonce:BigInt(cert.nonce)}} as const;}
+export function keeperAuthorizationId(cert:Omit<KeeperCertificate,'signature'>,router:Address){return hashTypedData(keeperTypedData(cert,router));}

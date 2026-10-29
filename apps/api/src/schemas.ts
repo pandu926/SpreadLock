@@ -1,0 +1,12 @@
+import { Type } from '@sinclair/typebox';
+export const AddressSchema=Type.String({pattern:'^0x[0-9a-fA-F]{40}$'});
+export const HashSchema=Type.String({pattern:'^0x[0-9a-fA-F]{64}$'});
+export const SignatureSchema=Type.String({pattern:'^0x([0-9a-fA-F]{2}){1,4096}$'});
+export const UintSchema=Type.String({pattern:'^(0|[1-9][0-9]{0,77})$'});
+export const IntSchema=Type.String({pattern:'^-?(0|[1-9][0-9]{0,77})$'});
+export const closed=<T extends Record<string,any>>(properties:T)=>Type.Object(properties,{additionalProperties:false});
+export const LegSchema=closed({pool:AddressSchema,delta:IntSchema,limitPrice:UintSchema,maxTakerFeeBpsTimes1k:Type.Integer({minimum:0,maximum:9999999})});
+export const IntentSchema=closed({account:AddressSchema,executor:AddressSchema,nonce:UintSchema,epoch:UintSchema,expectedRevision:UintSchema,expectedPositionsHash:HashSchema,validAfter:UintSchema,validUntil:UintSchema,operation:Type.Integer({minimum:0,maximum:2}),legs:Type.Array(LegSchema,{minItems:1,maxItems:8}),minNetQuote:IntSchema,triggerKind:Type.Integer({minimum:0,maximum:2}),triggerValue:IntSchema,minPostEquity:UintSchema,minPostHealthBps:Type.Integer({minimum:0,maximum:4294967295})});
+export const LimitSchema=Type.Union([Type.Integer({minimum:1,maximum:100}),Type.String({pattern:'^([1-9][0-9]?|100)$'})]);
+export const PaginationSchema=closed({limit:Type.Optional(LimitSchema),cursor:Type.Optional(Type.String({minLength:1,maxLength:160}))});
+export const AuthorizationSchema=closed({owner:AddressSchema,keeper:AddressSchema,accounts:Type.Array(AddressSchema,{minItems:1,maxItems:100,uniqueItems:true}),chainId:Type.Integer({minimum:1,maximum:Number.MAX_SAFE_INTEGER}),validUntil:UintSchema,nonce:UintSchema,signature:SignatureSchema});

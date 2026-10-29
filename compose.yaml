@@ -1,0 +1,60 @@
+name: spreadlock
+x-service: &service
+  build: .
+  image: spreadlock:${RELEASE_TAG:-local}
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging: {driver: json-file, options: {max-size: 10m, max-file: '3'}}
+  environment: &env
+    NODE_ENV: production
+    DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL with the matching dedicated postgres credentials}
+    SPREADLOCK_MANIFEST: /config/deployment.json
+    RPC_HTTP_URL: ${RPC_HTTP_URL:?set RPC_HTTP_URL}
+    PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
+  volumes: [./runtime/deployment.json:/config/deployment.json:ro]
+  networks: [app]
+services:
+  db:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: spreadlock
+      POSTGRES_USER: spreadlock
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [app]
+    mem_limit: 768m
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U spreadlock -d spreadlock']
+      interval: 10s
+      retries: 6
+  api:
+    <<: *service
+    environment:
+      <<: *env
+      HOST: 0.0.0.0
+      PORT: '18180'
+      TRUST_PROXY_CIDRS: ${TRUST_PROXY_CIDRS:-127.0.0.1}
+    ports: [127.0.0.1:18180:18180]
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 512m
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:18180/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      retries: 3
+  indexer:
+    <<: *service
+    command: [node, dist/indexer.mjs]
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 512m
+volumes:
+  pgdata:
+networks:
+  app:
+secrets:
+  db_password:
+    file: ./secrets/db_password

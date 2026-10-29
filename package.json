@@ -1,0 +1,60 @@
+{
+  "name": "spreadlock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --config vitest.coverage.config.ts --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "node --import tsx scripts/e2e.ts",
+    "contracts:test": "forge test --root contracts",
+    "contracts:build": "forge build --root contracts",
+    "api": "node --import tsx apps/api/src/main.ts",
+    "indexer": "node --import tsx apps/indexer/src/main.ts",
+    "keeper": "node --import tsx apps/keeper/src/main.ts",
+    "cli": "node --import tsx apps/cli/src/main.ts",
+    "test:verification": "node --test scripts/verification/harness.test.mjs",
+    "verify:source": "node scripts/verification/cli.mjs source",
+    "verify:coverage": "node scripts/verification/cli.mjs coverage",
+    "verify:report": "node scripts/verification/cli.mjs validate",
+    "verify:release": "node scripts/verification/run.mjs",
+    "contracts:coverage": "forge coverage --ir-minimum --exclude-tests --report lcov --report-file contracts/evidence/hardening.lcov && python3 contracts/script/tools/check_critical_coverage.py contracts/evidence/hardening.lcov --output contracts/evidence/hardening-coverage-gate.json",
+    "contracts:mutations": "python3 contracts/script/tools/security_mutations.py",
+    "test:operations": "node --test ops/testing/*.test.mjs",
+    "test:load": "node --import tsx ops/scripts/campaign-load.ts",
+    "test:soak": "node --import tsx ops/scripts/campaign-soak.ts",
+    "test:dr": "node ops/scripts/campaign-dr.mjs verify"
+  },
+  "dependencies": {
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/swagger": "^9.5.0",
+    "@fastify/swagger-ui": "^6.1.2",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@sinclair/typebox": "^0.34.41",
+    "@somnia-chain/markets-sdk": "0.32.1",
+    "drizzle-orm": "^0.45.4",
+    "ethers": "^6.15.0",
+    "fastify": "^5.6.0",
+    "pg": "^8.16.3",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.5",
+    "@vitest/coverage-v8": "^5.0.5",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

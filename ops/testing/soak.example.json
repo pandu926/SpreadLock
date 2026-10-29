@@ -1,0 +1,8 @@
+{
+  "stateFile": "runtime/soak/state.json",
+  "reportFile": "evidence/operations/soak.json",
+  "manifestFile": "runtime/deployment.json",
+  "apiBaseUrl": "http://127.0.0.1:18180",
+  "owner": "0x1111111111111111111111111111111111111111",
+  "campaignFiles": ["evidence/public-testnet/campaign.json"]
+}

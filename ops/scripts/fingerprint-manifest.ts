@@ -1,0 +1,13 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {createPublicClient,http} from 'viem';
+import {parseManifest} from '../../packages/sdk/src/index.js';
+import {fingerprint} from '../../apps/indexer/src/fingerprints.js';
+const file=process.argv[2],output=process.argv[3];
+if(!file||!output)throw new Error('Usage: node --import tsx ops/scripts/fingerprint-manifest.ts manifest.json output.json');
+const manifest=parseManifest(JSON.parse(await readFile(file,'utf8'))),rpc=process.env.RPC_HTTP_URL??manifest.rpcHttpUrl;
+if(!rpc)throw new Error('RPC_HTTP_URL required');const client=createPublicClient({transport:http(rpc)});
+if(await client.getChainId()!==manifest.chainId)throw new Error('Wrong chain');
+const addresses=[manifest.router,manifest.factory,manifest.marketRegistry,manifest.marginBank,manifest.collateral,manifest.permissionsRegistry,manifest.protocolFactory,...manifest.markets];
+const fingerprints=Object.fromEntries(await Promise.all(addresses.map(async address=>[address,await fingerprint(client,address)])));
+await writeFile(output,JSON.stringify({...manifest,fingerprints},null,2)+'\n',{flag:'wx',mode:0o600});
+console.log('Manifest captured. Review implementation addresses and hashes independently before production use.');

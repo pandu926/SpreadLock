@@ -1,5 +1,7 @@
 # SpreadLock
 
+<img src="assets/spreadlock-logo.png" alt="SpreadLock logo" width="160" height="160" />
+
 **A signed basket of dreamDEX perpetual orders, committed as one transaction.**
 
 On 29 October 2026, SpreadLock opened a **0.00013 BTC long** and a **0.004 ETH short** together on Somnia testnet. A second transaction closed both. The basket finished flat, its router permission was revoked, and its remaining margin was withdrawn.
